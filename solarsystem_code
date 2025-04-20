@@ -1,0 +1,151 @@
+<canvas id="solarSystem" width="1200" height="1200"></canvas>
+<script>
+const canvas = document.getElementById('solarSystem');
+const ctx = canvas.getContext('2d');
+
+const sun = { x: canvas.width / 2, y: canvas.height / 2, radius: 30 };
+
+const planets = [
+  { name: 'Mercury', radius: 4, distance: 80, orbitalRadius: 58, angle: 0, speed: 0.003, color: 'orange' },
+  { name: 'Venus', radius: 6, distance: 130, orbitalRadius: 108, angle: 0.5, speed: 0.0025, color: 'goldenrod' },
+  {
+    name: 'Earth',
+    radius: 10,
+    distance: 190,
+    orbitalRadius: 150,
+    angle: 1,
+    speed: 0.002,
+    color: 'blue',
+    moons: [
+      { name: 'Moon', radius: 3, distance: 20, angle: 0, speed: 0.01, color: 'gray' }
+    ]
+  },
+  { name: 'Mars', radius: 6, distance: 260, orbitalRadius: 228, angle: 1.5, speed: 0.0015, color: 'red' },
+  {
+    name: 'Jupiter',
+    radius: 14,
+    distance: 350,
+    orbitalRadius: 778,
+    angle: 2,
+    speed: 0.001,
+    color: 'burlywood',
+    redSpotAngle: 0,
+    redSpotSpeed: 0.01,
+    moons: [
+      { name: 'Io', radius: 2, distance: 18, angle: 0, speed: 0.015, color: '#ccc' },
+      { name: 'Europa', radius: 2, distance: 26, angle: 1, speed: 0.012, color: '#aaa' },
+      { name: 'Ganymede', radius: 3, distance: 35, angle: 2, speed: 0.01, color: '#999' },
+      { name: 'Callisto', radius: 3, distance: 45, angle: 3, speed: 0.008, color: '#777' }
+    ]
+  },
+  {
+    name: 'Saturn',
+    radius: 12,
+    distance: 450,
+    orbitalRadius: 1430,
+    angle: 2.5,
+    speed: 0.0008,
+    color: 'khaki'
+  },
+  { name: 'Uranus', radius: 10, distance: 540, orbitalRadius: 2870, angle: 3, speed: 0.0006, color: 'lightblue' },
+  { name: 'Neptune', radius: 10, distance: 600, orbitalRadius: 4490, angle: 3.5, speed: 0.0005, color: 'royalblue' }
+];
+
+function draw() {
+  ctx.fillStyle = '#000015';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Sun
+  ctx.beginPath();
+  ctx.arc(sun.x, sun.y, sun.radius, 0, Math.PI * 2);
+  ctx.fillStyle = 'yellow';
+  ctx.fill();
+  ctx.fillStyle = 'white';
+  ctx.font = '12px Arial';
+  ctx.fillText('Sun', sun.x + 35, sun.y);
+
+  planets.forEach(p => {
+    p.angle += p.speed;
+    const px = sun.x + p.distance * Math.cos(p.angle);
+    const py = sun.y + p.distance * Math.sin(p.angle);
+
+    // Orbit path
+    ctx.beginPath();
+    ctx.arc(sun.x, sun.y, p.distance, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+
+    // Saturn rings
+    if (p.name === 'Saturn') {
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(0.5);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.radius + 8, p.radius + 2, 0, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(200, 200, 150, 0.5)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Planet body
+    ctx.beginPath();
+    ctx.arc(px, py, p.radius, 0, Math.PI * 2);
+    ctx.fillStyle = p.color;
+    ctx.fill();
+
+    // Jupiter red spot
+    if (p.name === 'Jupiter') {
+      p.redSpotAngle += p.redSpotSpeed;
+      const spotX = px + p.radius * 0.7 * Math.cos(p.redSpotAngle);
+      const spotY = py + p.radius * 0.4 * Math.sin(p.redSpotAngle);
+      ctx.beginPath();
+      ctx.ellipse(spotX, spotY, 3, 2, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'red';
+      ctx.fill();
+    }
+
+    // Planet name label
+    ctx.fillStyle = 'white';
+    ctx.font = '10px Arial';
+    ctx.fillText(p.name, px + p.radius + 3, py);
+
+    // Realistic distance from Earth
+    if (p.name !== 'Earth') {
+      const earth = planets.find(pl => pl.name === 'Earth');
+      const r1 = p.orbitalRadius;
+      const r2 = earth.orbitalRadius;
+      const theta = p.angle - earth.angle;
+      const realDistance = Math.sqrt(r1 * r1 + r2 * r2 - 2 * r1 * r2 * Math.cos(theta));
+      const formatted = realDistance.toFixed(1);
+
+      ctx.fillStyle = 'lightgreen';
+      ctx.font = '9px Arial';
+      ctx.fillText(`~${formatted}M km from Earth`, px + p.radius + 3, py + 12);
+    }
+
+    // Moons
+    if (p.moons) {
+      p.moons.forEach(m => {
+        m.angle += m.speed;
+        const mx = px + m.distance * Math.cos(m.angle);
+        const my = py + m.distance * Math.sin(m.angle);
+
+        ctx.beginPath();
+        ctx.arc(mx, my, m.radius, 0, Math.PI * 2);
+        ctx.fillStyle = m.color;
+        ctx.fill();
+
+        ctx.fillStyle = 'lightgray';
+        ctx.font = '9px Arial';
+        ctx.fillText(m.name, mx + 4, my);
+      });
+    }
+  });
+
+  requestAnimationFrame(draw);
+}
+
+draw();
+</script>
